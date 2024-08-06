@@ -1,0 +1,24 @@
+function print_common_info() {
+  printf("[%s:%d] ", execname(), pid());
+}
+
+probe begin {
+  printf("\nbegin to probe bluestore initialization\n\n");
+}
+
+/**
+ * BlueStore::BlueStore(ceph::common::CephContext*,
+ *   std::__cxx11::basic_string<char, std::char_traits<char>,
+ *   std::allocator<char> > const&, unsigned long)
+ */
+probe process("/yzq-dev/srcs/ceph-17.2.7-c8/build/bin/ceph-osd")
+  .function("_ZN9BlueStoreC1EPN4ceph6common11CephContextERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEm")
+{
+  print_usyms(ubacktrace());
+  print_common_info();
+  printf("init bluestore with (path=%s, alloc_size=%s)\n\n", $path$$, $_min_alloc_size$$);
+}
+
+probe end {
+  printf("\nend of probe\n");
+}

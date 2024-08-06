@@ -1,0 +1,30 @@
+/**
+ * Used to analyze RocksDB point reading(Get()) process
+ *
+ * BlueFS CallBack :
+ * BlueRocksRandomAccessFile::Read(unsigned long, unsigned long, rocksdb::Slice*, char*) const
+ *  \_ BlueFS::read_random(BlueFS::FileReader*, unsigned long, unsigned long, char*)
+ *      \_ BlueFS::_read_random(BlueFS::FileReader*, unsigned long, unsigned long, char*)
+ *          \_ BlueFS::_bdev_read_random(unsigned char, unsigned long, unsigned long, char*, bool)
+ *              \_ KernelDevice::read_random(unsigned long, unsigned long, char*, bool)
+ */
+
+function print_common_info() {
+	printf("[%s:%d] ", execname(), pid());
+}
+
+probe begin {
+	printf("\nbegin to probe\n\n");
+}
+
+probe end {
+	printf("\nend of probe\n");
+}
+
+// KernelDevice::read_random(unsigned long, unsigned long, char*, bool)
+probe process("/lib64/libkingdomfsrocksenv.so").function("_ZN12KernelDevice11read_randomEmmPcb") {
+	print_common_info();
+	printf("\n");
+	print_usyms(ubacktrace());
+	printf("\n\n");
+}

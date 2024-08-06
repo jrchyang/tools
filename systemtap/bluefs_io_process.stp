@@ -1,0 +1,253 @@
+/**
+ * Call Stack
+ *
+ * BlueFS::append_try_flush
+ * BlueFS::fsync
+ *   \- BlueFS::_flush_F
+ *        \- BlueFS::_flush_range_F
+ *             \- BlueFS::_allocate
+ *             \- BlueFS::_flush_data
+ *                  \- KernelDevice::aio_write
+ *   \- BlueFS::_flush_bdev
+ *        \- BlueFS::_claim_completed_aios
+ *        \- BlueFS::_wait_for_aio
+ *        \- BlueFS::_flush_bdev
+ *             \- KernelDevice::flush
+ *  \- BlueFS::_flush_and_sync_log_LD
+ *  \- BlueFS::_compact_log_async_LD_LNF_D
+ */
+global show_header;
+
+global append_cast, append_cast_pre, append_cast_show;
+global append_cnt, append_cnt_pre, append_cnt_show;
+
+global fsync_cast, fsync_cast_pre, fsync_cast_show;
+global fsync_cnt, fsync_cnt_pre, fsync_cnt_show;
+
+global flush_f_cast, flush_f_cast_pre, flush_f_cast_show;
+global flush_f_cnt, flush_f_cnt_pre, flush_f_cnt_show;
+
+global flush_range_cast, flush_range_cast_pre, flush_range_cast_show;
+global flush_range_cnt, flush_range_cnt_pre, flush_range_cnt_show;
+
+global alloc_cast, alloc_cast_pre, alloc_cast_show;
+global alloc_cnt, alloc_cnt_pre, alloc_cnt_show;
+
+global flush_data_cast, flush_data_cast_pre, flush_data_cast_show;
+global flush_data_cnt, flush_data_cnt_pre, flush_data_cnt_show;
+
+global flush_buffer_cast, flush_buffer_cast_pre, flush_buffer_cast_show;
+global flush_buffer_cnt, flush_buffer_cnt_pre, flush_buffer_cnt_show;
+
+global aio_write_cast, aio_write_cast_pre, aio_write_cast_show;
+global aio_write_cnt, aio_write_cnt_pre, aio_write_cnt_show;
+
+global flush_bdev_cast, flush_bdev_cast_pre, flush_bdev_cast_show;
+global flush_bdev_cnt, flush_bdev_cnt_pre, flush_bdev_cnt_show;
+
+global claim_aios_cast, claim_aios_cast_pre, claim_aios_cast_show;
+global claim_aios_cnt, claim_aios_cnt_pre, claim_aios_cnt_show;
+
+global wait_aio_cast, wait_aio_cast_pre, wait_aio_cast_show;
+global wait_aio_cnt, wait_aio_cnt_pre, wait_aio_cnt_show;
+
+global flush_dirty_cast, flush_dirty_cast_pre, flush_dirty_cast_show;
+global flush_dirty_cnt, flush_dirty_cnt_pre, flush_dirty_cnt_show;
+
+global bdev_flush_cast, bdev_flush_cast_pre, bdev_flush_cast_show;
+global bdev_flush_cnt, bdev_flush_cnt_pre, bdev_flush_cnt_show;
+
+global fs_log_cast, fs_log_cast_pre, fs_log_cast_show;
+global fs_log_cnt, fs_log_cnt_pre, fs_log_cnt_show;
+
+global compact_cast, compact_cast_pre, compact_cast_show;
+global compact_cnt, compact_cnt_pre, compact_cnt_show;
+
+function show_item_rato(cast, cnt) {
+  return cast == 0 ? 0 : cast / cnt;
+}
+
+probe begin {
+  show_header = 0;
+}
+
+probe timer.s(60) {
+  append_cast_show = append_cast - append_cast_pre; append_cast_pre = append_cast;
+  append_cnt_show = append_cnt - append_cnt_pre; append_cnt_pre = append_cnt;
+
+  fsync_cast_show = fsync_cast - fsync_cast_pre; fsync_cast_pre = fsync_cast;
+  fsync_cnt_show = fsync_cnt - fsync_cnt_pre; fsync_cnt_pre = fsync_cnt;
+
+  flush_f_cast_show = flush_f_cast - flush_f_cast_pre; flush_f_cast_pre = flush_f_cast;
+  flush_f_cnt_show = flush_f_cnt - flush_f_cnt_pre; flush_f_cnt_pre = flush_f_cnt;
+
+  flush_range_cast_show = flush_range_cast - flush_range_cast_pre; flush_range_cast_pre = flush_range_cast;
+  flush_range_cnt_show = flush_range_cnt - flush_range_cnt_pre; flush_range_cnt_pre = flush_range_cnt;
+
+  alloc_cast_show = alloc_cast - alloc_cast_pre; alloc_cast_pre = alloc_cast;
+  alloc_cnt_show = alloc_cnt - alloc_cnt_pre; alloc_cnt_pre = alloc_cnt;
+
+  flush_data_cast_show = flush_data_cast - flush_data_cast_pre; flush_data_cast_pre = flush_data_cast;
+  flush_data_cnt_show = flush_data_cnt - flush_data_cnt_pre; flush_data_cnt_pre = flush_data_cnt;
+
+  flush_buffer_cast_show = flush_buffer_cast - flush_buffer_cast_pre; flush_buffer_cast_pre = flush_buffer_cast;
+  flush_buffer_cnt_show = flush_buffer_cnt - flush_buffer_cnt_pre; flush_buffer_cnt_pre = flush_buffer_cnt;
+
+  aio_write_cast_show = aio_write_cast - aio_write_cast_pre; aio_write_cast_pre = aio_write_cast;
+  aio_write_cnt_show = aio_write_cnt - aio_write_cnt_pre; aio_write_cnt_pre = aio_write_cnt;
+
+  flush_bdev_cast_show = flush_bdev_cast - flush_bdev_cast_pre; flush_bdev_cast_pre = flush_bdev_cast;
+  flush_bdev_cnt_show = flush_bdev_cnt - flush_bdev_cnt_pre; flush_bdev_cnt_pre = flush_bdev_cnt;
+
+  claim_aios_cast_show = claim_aios_cast - claim_aios_cast_pre; claim_aios_cast_pre = claim_aios_cast;
+  claim_aios_cnt_show = claim_aios_cnt - claim_aios_cnt_pre; claim_aios_cnt_pre = claim_aios_cnt;
+
+  wait_aio_cast_show = wait_aio_cast - wait_aio_cast_pre; wait_aio_cast_pre = wait_aio_cast;
+  wait_aio_cnt_show = wait_aio_cnt - wait_aio_cnt_pre; wait_aio_cnt_pre = wait_aio_cnt;
+
+  flush_dirty_cast_show = flush_dirty_cast - flush_dirty_cast_pre; flush_dirty_cast_pre = flush_dirty_cast;
+  flush_dirty_cnt_show = flush_dirty_cnt - flush_dirty_cnt_pre; flush_dirty_cnt_pre = flush_dirty_cnt;
+
+  bdev_flush_cast_show = bdev_flush_cast - bdev_flush_cast_pre; bdev_flush_cast_pre = bdev_flush_cast;
+  bdev_flush_cnt_show = bdev_flush_cnt - bdev_flush_cnt_pre; bdev_flush_cnt_pre = bdev_flush_cnt;
+
+  fs_log_cast_show = fs_log_cast - fs_log_cast_pre; fs_log_cast_pre = fs_log_cast;
+  fs_log_cnt_show = fs_log_cnt - fs_log_cnt_pre; fs_log_cnt_pre = fs_log_cnt;
+
+  compact_cast_show = compact_cast - compact_cast_pre; compact_cast_pre = compact_cast;
+  compact_cnt_show = compact_cnt - compact_cnt_pre; compact_cnt_pre = compact_cnt;
+
+  if (show_header % 30 == 0) {
+    printf("\n%10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n",
+	   "class", "append", "fsync", "flush_f", "flush_rng", "alloc", "flush_data",
+	   "flush_buf", "aio_write", "flush_bdev", "claim_aio", "wait_aio", "flush_dty",
+	   "bdev_flush", "flush_log", "compact");
+    printf("------------------------------------------------------------"
+	   "------------------------------------------------------------"
+	   "------------------------------------------------------------\n")
+    show_header = 0;
+  }
+  show_header += 1;
+
+  printf("%10s %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d\n",
+	 "cast",
+	 append_cast_show, fsync_cast_show, flush_f_cast_show, flush_range_cast_show,
+	 alloc_cast_show, flush_data_cast_show, flush_buffer_cast_show,
+	 aio_write_cast_show, flush_bdev_cast_show, claim_aios_cast_show,
+	 wait_aio_cast_show, flush_dirty_cast_show, bdev_flush_cast_show,
+	 fs_log_cast_show, compact_cast_show);
+  printf("%10s %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d\n",
+	 "cnt",
+	 append_cnt_show, fsync_cnt_show, flush_f_cnt_show, flush_range_cnt_show,
+	 alloc_cnt_show, flush_data_cnt_show, flush_buffer_cnt_show,
+	 aio_write_cnt_show, flush_bdev_cnt_show, claim_aios_cnt_show,
+	 wait_aio_cnt_show, flush_dirty_cnt_show, bdev_flush_cnt_show,
+	 fs_log_cnt_show, compact_cnt_show);
+printf("%10s %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d %10d\n",
+	 "precall",
+	 show_item_rato(append_cast_show, append_cnt_show),
+	 show_item_rato(fsync_cast_show, fsync_cnt_show),
+	 show_item_rato(flush_f_cast_show, flush_f_cnt_show),
+	 show_item_rato(flush_range_cast_show, flush_range_cnt_show),
+	 show_item_rato(alloc_cast_show, alloc_cnt_show),
+	 show_item_rato(flush_data_cast_show, flush_data_cnt_show),
+	 show_item_rato(flush_buffer_cast_show, flush_buffer_cnt_show),
+	 show_item_rato(aio_write_cast_show, aio_write_cnt_show),
+	 show_item_rato(flush_bdev_cast_show, flush_bdev_cnt_show),
+	 show_item_rato(claim_aios_cast_show, claim_aios_cnt_show),
+	 show_item_rato(wait_aio_cast_show, wait_aio_cnt_show),
+	 show_item_rato(flush_dirty_cast_show, flush_dirty_cnt_show),
+	 show_item_rato(bdev_flush_cast_show, bdev_flush_cnt_show),
+	 show_item_rato(fs_log_cast_show, fs_log_cnt_show),
+	 show_item_rato(compact_cast_show, compact_cnt_show));
+}
+
+// BlueFS::append_try_flush
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS16append_try_flushEPNS_10FileWriterEPKcm").return {
+  append_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  append_cnt += 1;
+}
+
+// BlueFS::fsync
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS5fsyncEPNS_10FileWriterE").return {
+  fsync_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  fsync_cnt += 1;
+}
+
+// int BlueFS::_flush_F(FileWriter *h, bool force, bool *flushed)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS8_flush_FEPNS_10FileWriterEbPb").return {
+  flush_f_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  flush_f_cnt += 1;
+}
+
+// int BlueFS::_flush_range_F(FileWriter *h, uint64_t offset, uint64_t length)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS14_flush_range_FEPNS_10FileWriterEmm").return {
+  flush_range_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  flush_range_cnt += 1;
+}
+
+// int BlueFS::_allocate(uint8_t id, uint64_t len, uint64_t alloc_unit, bluefs_fnode_t* node, size_t alloc_attempts, bool permit_dev_fallback)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS9_allocateEhmmP14bluefs_fnode_tmb").return {
+  alloc_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  alloc_cnt += 1;
+}
+
+// int BlueFS::_flush_data(FileWriter *h, uint64_t offset, uint64_t length, bool buffered)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS11_flush_dataEPNS_10FileWriterEmmb").return {
+  flush_data_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  flush_data_cnt += 1;
+}
+
+// ceph::bufferlist BlueFS::FileWriter::flush_buffer(CephContext* const cct, const bool partial, const unsigned length, const bluefs_super_t& super)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS10FileWriter12flush_bufferEPN4ceph6common11CephContextEbjRK14bluefs_super_t").return {
+  flush_buffer_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  flush_buffer_cnt += 1;
+}
+
+// int KernelDevice::aio_write( uint64_t off, bufferlist &bl, IOContext *ioc, bool buffered, int write_hint)
+probe process("/lib64/bluefs.so").function("_ZN12KernelDevice9aio_writeEmRN4ceph6buffer7v15_2_04listEP9IOContextbi").return {
+  aio_write_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  aio_write_cnt += 1;
+}
+
+// void BlueFS::_flush_bdev(FileWriter *h, bool check_mutext_locked)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS11_flush_bdevEPNS_10FileWriterEb").return {
+  flush_bdev_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  flush_bdev_cnt += 1;
+}
+
+// void BlueFS::_claim_completed_aios(FileWriter *h, list<aio_t> *ls)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS21_claim_completed_aiosEPNS_10FileWriterEPNSt7__cxx114listI5aio_tSaIS4_EEE").return {
+  claim_aios_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  claim_aios_cnt += 1;
+}
+
+// void BlueFS::_wait_for_aio(FileWriter *h)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS13_wait_for_aioEPNS_10FileWriterE").return {
+  wait_aio_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  wait_aio_cnt += 1;
+}
+
+// void BlueFS::_flush_bdev(std::array<bool, MAX_BDEV>& dirty_bdevs)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS11_flush_bdevERSt5arrayIbLm5EE").return {
+  flush_dirty_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  flush_dirty_cnt += 1;
+}
+
+// int KernelDevice::flush()
+probe process("/lib64/bluefs.so").function("_ZN12KernelDevice5flushEv").return {
+  bdev_flush_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  bdev_flush_cnt += 1;
+}
+
+// int BlueFS::_flush_and_sync_log_LD(uint64_t want_seq)
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS22_flush_and_sync_log_LDEm").return {
+  fs_log_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  fs_log_cnt += 1;
+}
+
+// void BlueFS::_compact_log_async_LD_LNF_D()
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS27_compact_log_async_LD_LNF_DEv").return {
+  compact_cast += (gettimeofday_us() - @entry(gettimeofday_us()));
+  compact_cnt += 1;
+}

@@ -1,0 +1,157 @@
+global show_header;
+global use_ms=0;
+
+global bfs_append, bfs_append_pre, bfs_append_show;
+global bfs_sync, bfs_sync_pre, bfs_sync_show;
+global bfs_cnt_append, bfs_cnt_append_pre, bfs_cnt_append_show;
+global bfs_cnt_sync, bfs_cnt_sync_pre, bfs_cnt_sync_show;
+
+global libc_append, libc_append_pre, libc_append_show;
+global libc_sync, libc_sync_pre, libc_sync_show;
+global libc_cnt_append, libc_cnt_append_pre, libc_cnt_append_show;
+global libc_cnt_sync, libc_cnt_sync_pre, libc_cnt_sync_show;
+
+global posix_append, posix_append_pre, posix_append_show;
+global posix_sync, posix_sync_pre, posix_sync_show;
+global posix_cnt_append, posix_cnt_append_pre, posix_cnt_append_show;
+global posix_cnt_sync, posix_cnt_sync_pre, posix_cnt_sync_show;
+
+global db_append, db_append_pre, db_append_show;
+global db_sync, db_sync_pre, db_sync_show;
+global db_put, db_put_pre, db_put_show;
+global db_cnt_append, db_cnt_append_pre, db_cnt_append_show;
+global db_cnt_sync, db_cnt_sync_pre, db_cnt_sync_show;
+global db_cnt_put, db_cnt_put_pre, db_cnt_put_show;
+
+probe timer.s(60) {
+  bfs_append_show = bfs_append - bfs_append_pre; bfs_append_pre = bfs_append;
+  bfs_sync_show = bfs_sync - bfs_sync_pre; bfs_sync_pre = bfs_sync;
+  bfs_cnt_append_show = bfs_cnt_append - bfs_cnt_append_pre; bfs_cnt_append_pre = bfs_cnt_append;
+  bfs_cnt_sync_show = bfs_cnt_sync - bfs_cnt_sync_pre; bfs_cnt_sync_pre = bfs_cnt_sync;
+
+  libc_append_show = libc_append - libc_append_pre; libc_append_pre = libc_append;
+  libc_sync_show = libc_sync - libc_sync_pre; libc_sync_pre = libc_sync;
+  libc_cnt_append_show = libc_cnt_append - libc_cnt_append_pre; libc_cnt_append_pre = libc_cnt_append;
+  libc_cnt_sync_show = libc_cnt_sync - libc_cnt_sync_pre; libc_cnt_sync_pre = libc_cnt_sync;
+
+  posix_append_show = posix_append - posix_append_pre; posix_append_pre = posix_append;
+  posix_sync_show = posix_sync - posix_sync_pre; posix_sync_pre = posix_sync;
+  posix_cnt_append_show = posix_cnt_append - posix_cnt_append_pre; posix_cnt_append_pre = posix_cnt_append;
+  posix_cnt_sync_show = posix_cnt_sync - posix_cnt_sync_pre; posix_cnt_sync_pre = posix_cnt_sync;
+
+  db_append_show = db_append - db_append_pre; db_append_pre = db_append;
+  db_sync_show = db_sync - db_sync_pre; db_sync_pre = db_sync;
+  db_put_show = db_put - db_put_pre; db_put_pre = db_put;
+  db_cnt_append_show = db_cnt_append - db_cnt_append_pre; db_cnt_append_pre = db_cnt_append;
+  db_cnt_sync_show = db_cnt_sync - db_cnt_sync_pre; db_cnt_sync_pre = db_cnt_sync;
+  db_cnt_put_show = db_cnt_put - db_cnt_put_pre; db_cnt_put_pre = db_cnt_put;
+
+  if (use_ms) {
+    bfs_append_show /= 1000;
+    bfs_sync_show /= 1000;
+    libc_append_show /= 1000;
+    libc_sync_show /= 1000;
+    posix_append_show /= 1000;
+    posix_sync_show /= 1000;
+    db_append_show /= 1000;
+    db_sync_show /= 1000;
+    db_put_show /= 1000;
+  }
+
+  if (show_header % 30 == 0) {
+    printf("\n%10s %10s %10s %10s %10s %10s %10s %10s %10s %10s\n",
+           "class", "db_put", "db_app", "db_sync",
+           "posix_app", "posix_sync",
+           "libc_app", "libc_sync", "bfs_app", "bfs_sync");
+    printf("----------------------------------------------------------------"
+           "--------------------------------------------------------\n");
+  }
+  show_header += 1;
+
+  printf("%10s %10d %10d %10d %10d %10d %10d %10d %10d %10d\n",
+         "cast",
+         db_put_show, db_append_show, db_sync_show,
+         posix_append_show, posix_sync_show,
+         libc_append_show, libc_sync_show,
+         bfs_append_show, bfs_sync_show);
+  printf("%10s %10d %10d %10d %10d %10d %10d %10d %10d %10d\n",
+         "count",
+         db_cnt_put_show, db_cnt_append_show, db_cnt_sync_show,
+         posix_cnt_append_show, posix_cnt_sync_show,
+         libc_cnt_append_show, libc_cnt_sync_show,
+         bfs_cnt_append_show, bfs_cnt_sync_show);
+  printf("%10s %10d %10d %10d %10d %10d %10d %10d %10d %10d\n\n",
+         "percast",
+         db_cnt_put_show == 0 ? 0 : db_put_show/db_cnt_put_show,
+         db_cnt_append_show == 0 ? 0 : db_append_show/db_cnt_append_show,
+         db_cnt_sync_show == 0 ? 0 : db_sync_show/db_cnt_sync_show,
+         posix_cnt_append_show == 0 ? 0 : posix_append_show/posix_cnt_append_show,
+         posix_cnt_sync_show == 0 ? 0 : posix_sync_show/posix_cnt_sync_show,
+         libc_cnt_append_show == 0 ? 0 : libc_append_show/libc_cnt_append_show,
+         libc_cnt_sync_show == 0 ? 0 : libc_sync_show/libc_cnt_sync_show,
+         bfs_cnt_append_show == 0 ? 0 : bfs_append_show/bfs_cnt_append_show,
+         bfs_cnt_sync_show == 0 ? 0 : bfs_sync_show/bfs_cnt_sync_show);
+}
+
+probe begin {
+  bfs_cnt_append = bfs_cnt_append_pre = bfs_cnt_append_show = 0;
+  bfs_cnt_sync = bfs_cnt_sync_pre = bfs_cnt_sync_show = 0;
+}
+
+// BlueFS::append_try_flush
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS16append_try_flushEPNS_10FileWriterEPKcm").return {
+  bfs_append += (gettimeofday_us() - @entry(gettimeofday_us()));
+  bfs_cnt_append += 1;
+}
+
+// BlueFS::fsync
+probe process("/lib64/bluefs.so").function("_ZN6BlueFS5fsyncEPNS_10FileWriterE").return {
+  bfs_sync += (gettimeofday_us() - @entry(gettimeofday_us()));
+  bfs_cnt_sync += 1;
+}
+
+// libc write
+probe process("/usr/lib64/libc.so.6").function("write").return {
+  if (execname() == "db_bench") {
+    libc_append += (gettimeofday_us() - @entry(gettimeofday_us()));
+    libc_cnt_append += 1;
+  }
+}
+
+// libc fdatasync
+probe process("/usr/lib64/libc.so.6").function("fdatasync").return {
+  if (execname() == "db_bench") {
+    libc_sync += (gettimeofday_us() - @entry(gettimeofday_us()));
+    libc_cnt_sync += 1;
+  }
+}
+
+// IOStatus PosixWritableFile::Append(const Slice& data, const IOOptions&, ODebugContext*)
+probe process("/root/projects/rocksdb-8.6.7-c8/build/librocksdb.so.8.6.7").function("_ZN7rocksdb17PosixWritableFile6AppendERKNS_5SliceERKNS_9IOOptionsEPNS_14IODebugContextE").return {
+  posix_append += (gettimeofday_us() - @entry(gettimeofday_us()));
+  posix_cnt_append += 1;
+}
+
+// IOStatus PosixWritableFile::Sync(const IOOptions&, IODebugContext*)
+probe process("/root/projects/rocksdb-8.6.7-c8/build/librocksdb.so.8.6.7").function("_ZN7rocksdb17PosixWritableFile4SyncERKNS_9IOOptionsEPNS_14IODebugContextE").return {
+  posix_sync += (gettimeofday_us() - @entry(gettimeofday_us()));
+  posix_cnt_sync += 1;
+}
+
+// rocksdb::(anonymous namespace)::LegacyWritableFileWrapper::Append(rocksdb::Slice const&, rocksdb::IOOptions const&, rocksdb::IODebugContext*)
+probe process("/root/projects/rocksdb-8.6.7-c8/build/librocksdb.so.8.6.7").function("_ZN7rocksdb12_GLOBAL__N_125LegacyWritableFileWrapper6AppendERKNS_5SliceERKNS_9IOOptionsEPNS_14IODebugContextE").return {
+  db_append += (gettimeofday_us() - @entry(gettimeofday_us()));
+  db_cnt_append += 1;
+}
+
+// rocksdb::(anonymous namespace)::LegacyWritableFileWrapper::Fsync(rocksdb::IOOptions const&, rocksdb::IODebugContext*)
+probe process("/root/projects/rocksdb-8.6.7-c8/build/librocksdb.so.8.6.7").function("_ZN7rocksdb12_GLOBAL__N_125LegacyWritableFileWrapper4SyncERKNS_9IOOptionsEPNS_14IODebugContextE").return {
+  db_sync += (gettimeofday_us() - @entry(gettimeofday_us()));
+  db_cnt_sync += 1;
+}
+
+// WriteBatch::Put(const Slice& key, const Slice& value)
+probe process("/root/projects/rocksdb-8.6.7-c8/build/librocksdb.so.8.6.7").function("_ZN7rocksdb10WriteBatch3PutEPNS_18ColumnFamilyHandleERKNS_5SliceES5_").return {
+  db_put += (gettimeofday_us() - @entry(gettimeofday_us()));
+  db_cnt_put += 1;
+}
