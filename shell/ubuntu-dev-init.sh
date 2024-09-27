@@ -34,7 +34,7 @@ sudo apt-get install -y \
   systemtap-sdt-dev libbpfcc-dev libbpf-dev libclang-dev bison flex \
   libelf-dev libcereal-dev libclang-dev libgtest-dev libgmock-dev asciidoctor \
   libthrift-dev texinfo rdma-core libsystemd-dev libblkid-dev libaio-dev \
-  libsnappy-dev lz4 tzdata exa bc
+  libsnappy-dev lz4 tzdata exa bc dwarves
 
 # config bash
 cp ~/.bashrc ~/.bashrc.bak
