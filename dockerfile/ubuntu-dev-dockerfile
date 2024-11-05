@@ -40,7 +40,7 @@ RUN apt-get install -y \
   libelf-dev libcereal-dev libclang-dev libgtest-dev libgmock-dev asciidoctor \
   libthrift-dev texinfo rdma-core libsystemd-dev libblkid-dev libaio-dev \
   libsnappy-dev lz4 libdw-dev bpfcc-tools bpftrace librados-dev librbd-dev \
-  nvme-cli fio exa
+  nvme-cli fio exa jq
 
 # install vim dev env
 RUN tee ~/.bashrc <<-'EOF'
@@ -198,6 +198,8 @@ RUN git clone --depth=1 --branch v18.2.0 https://github.com/ceph/ceph ceph-v18.2
   rm -rf ceph-v18.2.0
 
 # install clickhouse
+# vim ../absl/debugging/failure_signal_handler.cc
+# size_t stack_size = (std::max<size_t>(SIGSTKSZ, 65536) + page_mask) & ~page_mask;
 RUN wget -O abseil-cpp-20200923.3.tar.gz https://github.com/abseil/abseil-cpp/archive/refs/tags/20200923.3.tar.gz && \
   tar -zxf abseil-cpp-20200923.3.tar.gz && \
   cd abseil-cpp-20200923.3 && \
