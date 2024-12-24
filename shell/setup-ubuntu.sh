@@ -36,7 +36,7 @@ sudo apt-get install -y \
   libthrift-dev texinfo rdma-core libsystemd-dev libblkid-dev libaio-dev \
   libsnappy-dev lz4 tzdata exa bc dwarves jq libspdlog-dev \
   libprotobuf-dev protobuf-compiler zsh netcat libboost-all-dev \
-  libclang-12-dev bpftrace librados-dev librbd-dev
+  libclang-12-dev bpftrace librados-dev librbd-dev iputils-ping
 
 sudo cp /sys/kernel/btf/vmlinux /usr/lib/modules/`uname -r`/build/
 
