@@ -18,12 +18,13 @@ deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted univer
 
 # 预发布软件源，不建议启用
 # deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
-# # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
 
 EOF
 
 # install tools
 sudo apt-get update
+sudo echo "Asia\nShanghai" | apt-get -y install tzdata
 sudo apt-get install -y \
   vim git wget curl net-tools apt-file libtool\
   gcc g++ make automake cmake ninja-build build-essential \
@@ -34,18 +35,18 @@ sudo apt-get install -y \
   systemtap-sdt-dev libbpfcc-dev libbpf-dev libclang-dev bison flex \
   libelf-dev libcereal-dev libgtest-dev libgmock-dev asciidoctor \
   libthrift-dev texinfo rdma-core libsystemd-dev libblkid-dev libaio-dev \
-  libsnappy-dev lz4 tzdata exa bc dwarves jq libspdlog-dev \
+  libsnappy-dev lz4 exa bc dwarves jq libspdlog-dev \
   libprotobuf-dev protobuf-compiler zsh netcat libboost-all-dev \
-  libclang-12-dev bpftrace librados-dev librbd-dev iputils-ping \
-  nghttp2 libnghttp2-dev libssl-dev libcurl4-gnutls-dev \
-  fakeroot dpkg-dev libcurl4-openssl-dev
+  libclang-12-dev libdw-dev bpfcc-tools bpftrace librados-dev librbd-dev \
+  iputils-ping nghttp2 libnghttp2-dev libssl-dev libcurl4-gnutls-dev \
+  fakeroot dpkg-dev nvme-cli consul
 
-sudo cp /sys/kernel/btf/vmlinux /usr/lib/modules/`uname -r`/build/
+sudo cp /sys/kernel/btf/vmlinux /usr/lib/modules/"$(uname -r)"/build/
 
 # zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}"/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}"/plugins/zsh-syntax-highlighting
 
 vim ~/.zshrc
 :<<!
@@ -71,7 +72,7 @@ export USE_CCACHE=1
 export CCACHE_SLOPPINESS=file_macro,include_file_mtime,time_macros
 export CCACHE_UMASK=002
 !
-source ~/.zshrc
+source "$HOME/.zshrc"
 
 # vim
 git clone git@github.com:jrchyang/vimrc.git ~/.vim_runtime
