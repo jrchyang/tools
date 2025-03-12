@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sudo apt-get update
-sudo apt-get install -y ca-certificates
+apt-get update
+apt-get install -y ca-certificates
 
 # update apt source
 tee /etc/apt/sources.list <<-'EOF'
@@ -22,10 +22,10 @@ deb-src http://security.ubuntu.com/ubuntu/ jammy-security main restricted univer
 
 EOF
 
-# install tools
-sudo apt-get update
-sudo apt-get -y install tzdata
-sudo apt-get install -y \
+# install deps
+apt-get update
+apt-get -y install tzdata
+apt-get install -y \
   vim git wget curl net-tools apt-file libtool\
   gcc g++ make automake cmake ninja-build build-essential \
   python3 python3-dev python3-sphinx golang nodejs \
@@ -41,7 +41,22 @@ sudo apt-get install -y \
   iputils-ping nghttp2 libnghttp2-dev libssl-dev libcurl4-gnutls-dev \
   fakeroot dpkg-dev nvme-cli consul maven software-properties-common lsof
 
-sudo cp /sys/kernel/btf/vmlinux /usr/lib/modules/"$(uname -r)"/build/
+# rebuild git
+mkdir git-curl && \
+  cd git-curl && \
+  apt-get install -y debian-keyring build-essential fakeroot dpkg-dev libcurl4-openssl-dev && \
+  apt-get build-dep git && \
+  apt-get install -y libcurl4-openssl-dev && \
+  apt-get source git && \
+  cd git-2.34.1 && \
+  grep gnutls debian/control  && \
+  sed -i 's/libcurl4-gnutls-dev/libcurl4-openssl-dev/g' debian/control && \
+  grep curl debian/control && \
+  dpkg-buildpackage -b -uc -us && \
+  cd .. && \
+  dpkg -i git-man_2.34.1-1ubuntu1.12_all.deb git_2.34.1-1ubuntu1.12_amd64.deb && \
+  git version && \
+  cd ..
 
 # zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -72,24 +87,26 @@ export USE_CCACHE=1
 export CCACHE_SLOPPINESS=file_macro,include_file_mtime,time_macros
 export CCACHE_UMASK=002
 !
-source "$HOME/.zshrc"
+source ~/.zshrc
 
 # vim
-git clone git@github.com:jrchyang/vimrc.git ~/.vim_runtime
-# cd ~/.vim_runtime
-# git submodule update --init --recursive
-# python3 ~/.vim_runtime/my_plugins/YouCompleteMe/install.py --all --force-sudo
-sh ~/.vim_runtime/install_awesome_vimrc.sh
+git clone git@github.com:jrchyang/vimrc.git ~/.vim_runtime && \
+  cd ~/.vim_runtime && \
+  git submodule update --init --recursive && \
+  python3 ~/.vim_runtime/my_plugins/YouCompleteMe/install.py --all --force-sudo && \
+  sh ~/.vim_runtime/install_awesome_vimrc.sh && \
+  cd ~
 
 # go
-sudo add-apt-repository ppa:longsleep/golang-backports
-sudo apt-get update
-sudo apt-get install -y golang
-go env -w GOPROXY=https://goproxy.cn,direct
+add-apt-repository ppa:longsleep/golang-backports && \
+  apt-get update && \
+  apt-get install -y golang && \
+  go env -w GOPROXY=https://goproxy.cn,direct && \
+  go env
 
 # rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-. "$HOME/.cargo/env"
+. "~/.cargo/env"
 rustup component add rust-src rust-analyzer-preview
 
 # install clickhouse
@@ -101,7 +118,7 @@ wget -O abseil-cpp-20200923.3.tar.gz https://github.com/abseil/abseil-cpp/archiv
   mkdir build && cd build && \
   cmake .. -DCMAKE_BUILD_TYPE=Release && \
   make && \
-  sudo make install && \
+  make install && \
   cd ../..
 
 wget -O clickhouse-cpp-v2.1.0.tar.gz https://github.com/ClickHouse/clickhouse-cpp/archive/refs/tags/v2.1.0.tar.gz && \
@@ -110,7 +127,7 @@ wget -O clickhouse-cpp-v2.1.0.tar.gz https://github.com/ClickHouse/clickhouse-cp
   mkdir build && cd build && \
   cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release && \
   make && \
-  sudo make install && \
+  make install && \
   cd ../..
 
 # install rocksdb deps
@@ -119,7 +136,7 @@ git clone --depth=1 --branch v2.2.2 https://github.com/gflags/gflags.git gflags-
   mkdir build && cd build && \
   cmake .. -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release && \
   make && \
-  sudo make install && \
+  make install && \
   cd ../..
 
 git clone --depth=1 --branch 1.1.10 https://github.com/google/snappy.git snappy-v1.1.10 && \
@@ -128,7 +145,7 @@ git clone --depth=1 --branch 1.1.10 https://github.com/google/snappy.git snappy-
   mkdir build && cd build && \
   cmake .. -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release && \
   make && \
-  sudo make install && \
+  make install && \
   cd ../..
 
 wget -O leveldb-1.22.tar.gz https://github.com/google/leveldb/archive/refs/tags/1.22.tar.gz && \
@@ -137,38 +154,25 @@ wget -O leveldb-1.22.tar.gz https://github.com/google/leveldb/archive/refs/tags/
   mkdir build && cd build && \
   cmake .. -DCMAKE_BUILD_TYPE=Release && \
   make && \
-  sudo make install && \
+  make install && \
   cd ../..
 
-git clone --depth=1 --branch fio-3.38 https://github.com/axboe/fio.git fio-v3.38  && \
-  cd fio-v3.38 && \
-  ./configure && \
-  make && \
-  cd ..
-
 # ceph
-git clone git@github.com:jrchyang/ceph.git && \
-  cd ceph && \
-  git checkout v17.2.7-learn && \
-  git submodule update --init --recursive && \
-  ./install-deps.sh
-./do_cmake.sh -DCMAKE_CXX_STANDARD=20 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-  -DWITH_CCACHE=ON -DWITH_MGR_DASHBOARD_FRONTEND=OFF -DWITH_SPDK=ON \
-  -DWITH_ZBD=ON -DWITH_BLUESTORE=ON -DCMAKE_BUILD_TYPE=Release
+git clone https://github.com/ceph/ceph.git && cd ceph
+git checkout v16.2.15 && ./install-deps.sh
+git checkout v17.2.8 && ./install-deps.sh
+git checkout v18.2.4 && WITH_SEASTAR=true ./install-deps.sh
 
 # seastar
-git clone git@github.com:jrchyang/seastar.git && \
+git clone https://github.com/scylladb/seastar.git && \
   cd seastar && \
-  git checkout v22.11.0-learn && \
-  sudo ./install-dependencies.sh && \
-  ./configure.py --mode=release --compile-commands-json --c++-standard=20
-ninja -C build/release
+  git checkout v22.11.0 && \
+  ./install-dependencies.sh
 
 # spdk
-git clone git@github.com:jrchyang/spdk.git && \
+git https://github.com/spdk/spdk.git && \
   cd spdk && \
-  git checkout v24.01-learn && \
-  git submodule update --init --recursive
+  git checkout v24.09
 :<<!
 diff --git a/scripts/pkgdep/common.sh b/scripts/pkgdep/common.sh
 index 0f7151f..e35f632 100755
@@ -186,22 +190,12 @@ index 0f7151f..e35f632 100755
         install_shfmt
         install_spdk_bash_completion
 !
-sudo scripts/pkgdep.sh --all
-./configure --with-fio=/home/jrchyang/install-srcs/fio-v3.38 --with-vhost \
-  --with-vbdev-compress --with-crypto --with-virtio --with-vfio-user --with-rbd \
-  --with-rdma --with-shared --with-iscsi-initiator --with-ocf --with-uring=/usr/lib64 \
-  --with-raid5f --with-xnvme --with-fuse --with-usdt --enable-debug
+scripts/pkgdep.sh --all
 
-# rocksdb
-git clone git@github.com:jrchyang/rocksdb.git && \
-  cd rocksdb && \
-  git checkout v9.1.1-learn && \
-  mkdir build && cd build
-cmake .. -GNinja -DCMAKE_CXX_STANDARD=20 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-  -DFAIL_ON_WARNINGS=OFF -DCMAKE_BUILD_TYPE=Release -DWITH_ZLIB=1 -DWITH_ZSTD=1 \
-  -DUSE_RTTI=1 -DWITH_LZ4=ON
+git clone https://github.com/cubefs/cubefs.git && \
+  cd cubefs && \
+  git checkout v3.4.0 && \
+  ./build.sh && \
+  cd ..
 
-vim /etc/default/grub
-# GRUB_CMDLINE_LINUX_DEFAULT="intel_iommu=on iommu=pt"
-sudo update-grub
-sudo reboot
+apt-get clean
